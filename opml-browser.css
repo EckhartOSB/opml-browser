@@ -1,0 +1,55 @@
+.opml-browser-element {
+	display: block;
+	clear: left;
+	padding-top:5px;
+}
+
+.opml-browser-children {
+	display: block;
+	clear: left;
+}
+
+.opml-browser-buttondiv {
+	display: inline;
+	min-width: 16px;
+}
+
+.opml-browser-text {
+	display: inline;
+	padding-left: 3px;
+	font-size:12px;
+	line-height:12px;
+}
+
+img.opml-browser-button {
+	border-style: none;
+	float:left;
+	margin-right: 2px;
+}
+
+.opml-browser-box {
+	margin: 0;
+	padding: 0;
+	border-style: none;
+}
+
+.opml-browser-link {
+	font-size: 80%;
+	text-align: center;
+}
+
+.opml-browser-invisible {
+	display:none;
+}
+
+.opml-browser-visible {
+	display:block;
+	position: absolute;
+}
+
+.opml-browser-tooltip {
+	background-color: #FFF7D0;
+	padding: 0px;
+	border: 1px solid #000;
+	width: 200px;
+}
