@@ -26,15 +26,21 @@ showHelp: function(e, help) {
   var posX = e.x;
   var posY = e.y;
   if (help) {
-    help.className = 'opml-browser-visible opml-browser-tooltip';
-    help.style.left = posX;
-    help.style.top = posY+1;
+    help.tooltip_timer = setTimeout(function() {
+      help.className = 'opml-browser-visible opml-browser-tooltip';
+      help.style.left = posX;
+      help.style.top = posY+1;
+    }, 1000);
     opml_browser.stopEvent(e);
   }
 },
 
 hideHelp: function(e, help) {
   if (help) {
+    if (help.tooltip_timer) {
+      clearTimeout(help.tooltip_timer);
+      help.tooltip_timer = null;
+    }
     help.className = 'opml-browser-invisible opml-browser-tooltip';
     opml_browser.stopEvent(e);
   }

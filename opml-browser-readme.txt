@@ -2,8 +2,10 @@ Plugin Name: opml-browser
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Display an OPML browser as a widget, in your template, or in a page/post.
 Author: Sterling "Chip" Camden
-Version: 2.1
+Version: 2.2
 Author URI: http://chipsquips.com
+
+Bitbucket repository: http://bitbucket.org/sterlingcamden/opml-browser
 
 This WordPress plugin creates a hierarchical browser for an OPML file that can be hosted
 anywhere.  It provides a sidebar widget, as well as an API for displaying the browser in
@@ -40,24 +42,30 @@ FOR WIDGET DISPLAY:
     c.  Local Path: if the OPML file resides on the same server as your blog, specify
 	local path to the file here to improve performance and reduce bandwidth.
 	Leave empty to load from the URL.
-    d.  Exclude if no HTML link?  Check this box to omit any outline entry that
+    d.  Image URL: the URL for the icon images for each item.  if not set, defaults to
+        get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/'.
+    e.  Exclude if no HTML link?  Check this box to omit any outline entry that
         has no "htmlUrl" or "url" attribute.
-    e.  Exclude if no feed link?  Check this box to omit any outline entry that
+    f.  Exclude if no feed link?  Check this box to omit any outline entry that
         has no "xmlUrl" attribute.
-    f.  Exclude (this domain)? Check this box to omit any entry that has an htmlURL or
+    g.  Exclude (this domain)? Check this box to omit any entry that has an htmlURL or
 	xmlURL attribute that specifies a URL on the same domain as your WordPress blog.
-    g.  Link to OPML? Check this box to provide a link to your OPML using the OPML icon.
+    h.  Link to OPML? Check this box to provide a link to your OPML using the OPML icon.
 	This link will appear as the top-level entry in the hierarchy.
-    h.  Start with folders closed? Check this box to have all categories collapsed on
+    i.  Start with folders closed? Check this box to have all categories collapsed on
 	startup if and only if javascript is enabled in the browser (otherwise the user
 	wouldn't have any way to open them).
-    i.	Sort items?  Check this box to sort items by title within each folder, in natural order,
+    j.	Sort items?  Check this box to sort items by title within each folder, in natural order,
         case-insensitive.
-    j.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
+    k.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
         then all items will be sorted together.
-    k.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
+    l.  Include OPML descriptions as tooltips?  Check this box to use the OPML description
+        attribute (if present) as tooltip text for each item.
+    m.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
 	much sub-items should be indented from their containing item.  It is initially
 	set to "5px".  Empty this field	to suppress indentation.
+    n.  Include "Get this widget" link (please)?  Check this box to include a link to the
+        site for this widget, or uncheck it to omit the link.
 6.  Drag the opml-blogroll widget to the sidebar where you want it to appear.
 7.  Save changes.
 
@@ -67,22 +75,28 @@ FOR DISPLAY FROM PHP:
 	$browser->name = (string);		// Unique name for this instance (will be filtered for legal div id name chars)
 	$browser->filename = (string);		// name of local OPML file or URL
 	$browser->opmlurl = (string);		// URL for the OPML (only if you want to link it)
+	$browser->image_url = (string);		// URL for images (only to override the default, must have trailing /)
 	$browser->require_html = (boolean);	// Exclude non-category items with no htmlURL?
 	$browser->require_feed = (boolean);	// Exclude non-category items with no xmlUrl?
 	$browser->exclude_self = (boolean);	// Exclude htmlUrl or xmlUrl from the blog's domain?
 	$browser->closeall = (boolean);		// Start with all folders closed?
 	$browser->sort = (boolean);		// Sort items?
 	$browser->flatten = (boolean);		// Flatten hierarchy?
+	$browser->tooltips = (boolean)		// Include OPML descriptions as tooltips? (default = true)
 	$browser->margin = (string);		// CSS measurement for indent margin
+	$browser->credit = (boolean);		// Include "Get this widget" link? (default = true)
 	echo $browser->render();		// Renders the browser
 
 FOR DISPLAY WITHIN THE TEXT OF A POST OR PAGE:
 
-	[opml-browser name="string" filename="string", opmlurl="string", link_opml="1" require_html="1", require_feed="1"
-		exclude_self="1" closeall="1" sort="1" flatten="1" margin="string"]
+	[opml-browser name="string" filename="string", opmlurl="string", imageurl="string"
+	        link_opml="1" require_html="1", require_feed="1" exclude_self="1" closeall="1"
+		sort="1" flatten="1" tooltips="0" margin="string" credit="0" ]
 
-	All of the attributes are optional, and if omitted default to null.  That means, for instance, that you must
-	specify link_opml="1" to get an OPML link, and you must specify either filename or opmlurl to serve up any links at all.
+	All of the attributes are optional.  In cases where "0" is specified above (tooltips, credits), omitting the
+	attribute defaults to "1".  If "imageurl" is not specified, the default will be used (see above). 
+	All other attributes default to null.  That means, for instance, that you must specify link_opml="1"
+	to get an OPML link, and you must specify either filename or opmlurl to serve up any links at all.
 
 	You really only need to specify a unique name for each browser if you have more than one.  Widgets use "-widget-N-",
 	where N is the number of the widget.  If you don't specify a name, '' is assumed.
@@ -96,21 +110,22 @@ entry.
 
 If an entry has an "xmlUrl" attribute, an icon will be displayed, with a link
 to that entry's XML.  The "type" attribute of the entry will be used to find a PNG
-file in the "images" subdirectory.  So, if type="rss", then images/rss.png will be
-used.  If type="opml", images/opml.png will be used.  If the type attribute specifies a
-type for which there is no image, then images/unknown.png will be used.
+file in the image URL.  So, if type="rss", then rss.png will be used.  If type="opml",
+opml.png will be used.  If the type attribute specifies a type for which there is no image,
+then unknown.png will be used.
 
 If the "flatten hierarchy" option is not enabled, and the outline entry
-contains entries (typically a category), then an open folder icon ("images/folderopen.png")
+contains entries (typically a category), then an open folder icon ("folderopen.png")
 will be displayed.  This icon can be clicked to execute javascript that toggles the visibility
-of the contained entries, as well as toggling the icon to a closed folder ("images/folder.png").
+of the contained entries, as well as toggling the icon to a closed folder ("folder.png").
 Naturally, if javascript is disabled, the folders are all open all the time.
 
 The text for the entry will be displayed.  If an "htmlUrl" attribute was found, the
 text will be linked to that URL.
 
-If the OPML item has a "description" attribute, its value will be used as a tooltip for
-the item.
+If the "Include OPML descriptions as tooltips" option is enabled and the OPML item has a
+"description" attribute, its value will be used as a tooltip for the item.  The tooltip
+becomes visible one second after mouseover, and disappears immediately upon mouseout.
 
 The entire section will be cached using WordPress' built-in caching functions for
 up to 15 minutes.  However, if you "Save changes" to the widget in the dashboard,
@@ -120,6 +135,13 @@ Each widget automatically adds an OPML auto-discovery link to the <head> section
 your page if you have specified a URL.  Thanks to Sergio Longoni (http://kromeblog.kromeboy.net)
 
 CHANGE LOG
+
+VERSION 2.2
+
+- Added option for 'Image URL', defaulting to the previous hard-coded location (images subdirectory).
+- Added option for 'Include OPML descriptions as tooltips' with a default value of true.
+- Added delay of one second before showing tooltips.
+- Added option for 'Include "Get this widget" link?' with a default value of true.
 
 VERSION 2.1
 

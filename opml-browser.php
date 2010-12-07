@@ -4,7 +4,7 @@ Plugin Name: opml-browser widget
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Widget for browsing an OPML URL or file.
 Author: Sterling "Chip" Camden
-Version: 2.1
+Version: 2.2
 Author URI: http://www.chipsquips.com
 */
 
@@ -31,7 +31,9 @@ class OpmlBrowser
   var $closeall;        // Start with folders closed (if javascript enabled)
   var $sort_items;	// Sort items?
   var $flatten;		// Flatten categories?
+  var $tooltips;	// Show tooltips?
   var $margin;          // CSS margin for indent
+  var $credit;		// Include credit link?
   var $name;            // Unique name for this instance
   
   var $siteurl;         // URL for WordPress site
@@ -61,7 +63,9 @@ class OpmlBrowser
     $this->closeall = false;
     $this->sort_items = false;
     $this->flatten = false;
+    $this->tooltips = true;
     $this->margin = '5px';
+    $this->credit = true;
     $this->imagepath = array();
   }
 
@@ -173,7 +177,8 @@ class OpmlBrowser
           
           if ($include) {
       	    $elements[$title] = array('htmlUrl' => $htmlUrl, 'xmlUrl' => $xmlUrl, 'type' => $type,
-				'tooltip' => $description, 'hasChildren' => ($hasChildren && !$this->flatten),
+				'tooltip' => ($this->tooltips ? $description : null),
+				'hasChildren' => ($hasChildren && !$this->flatten),
 				'children' => $elem->children);
           }
           if ($this->flatten && $hasChildren)
@@ -265,6 +270,7 @@ function widget_opml_browser_init() {
             $newoptions[$number]['opmlurl'] = $_POST["opml-browser-opmlurl-$number"];
             $newoptions[$number]['opmlpath'] = $_POST["opml-browser-opmlpath-$number"];
             $newoptions[$number]['opmltitle'] = $_POST["opml-browser-opmltitle-$number"];
+	    $newoptions[$number]['imageurl'] = $_POST["opml-browser-imageurl-$number"];
             $newoptions[$number]['reqhtml'] = $_POST["opml-browser-reqhtml-$number"];
             $newoptions[$number]['reqfeed'] = $_POST["opml-browser-reqfeed-$number"];
             $newoptions[$number]['noself'] = $_POST["opml-browser-noself-$number"];
@@ -272,7 +278,9 @@ function widget_opml_browser_init() {
             $newoptions[$number]['closeall'] = $_POST["opml-browser-closeall-$number"];
 	    $newoptions[$number]['sortitems'] = $_POST["opml-browser-sortitems-$number"];
 	    $newoptions[$number]['flatten'] = $_POST["opml-browser-flatten-$number"];
+	    $newoptions[$number]['tooltips'] = $_POST["opml-browser-tooltips-$number"];
             $newoptions[$number]['indent'] = $_POST["opml-browser-indent-$number"];
+	    $newoptions[$number]['credit'] = $_POST["opml-browser-credit-$number"];
             wp_cache_delete("opml-browser-content-$number");
         }
         if ( $options != $newoptions ) {
@@ -293,6 +301,9 @@ function widget_opml_browser_init() {
 	  </label>
           <label for="opml-browser-opmltitle-<?php echo $number; ?>" style="display:block">
 	    OPML title override: <input type="text" id="opml-browser-opmltitle-<?php echo $number; ?>" name="opml-browser-opmltitle-<?php echo $number; ?>" size="50" value="<?php echo $options[$number]['opmltitle']; ?>" />
+	  </label>
+          <label for="opml-browser-imageurl-<?php echo $number; ?>" style="display:block">
+	    Image URL: <input type="text" id="opml-browser-imageurl-<?php echo $number; ?>" name="opml-browser-imageurl-<?php echo $number; ?>" size="50" value="<?php echo $options[$number]['imageurl']; ?>" />
 	  </label>
           <label for="opml-browser-reqhtml-<?php echo $number; ?>" style="display:block">
 	    Exclude if no HTML link? <input type="checkbox" id="opml-browser-reqhtml-<?php echo $number; ?>" name="opml-browser-reqhtml-<?php echo $number; ?>" value="1" <?php if ($options[$number]['reqhtml'] == '1') { ?>checked="true"<?php } ?> />
@@ -315,8 +326,14 @@ function widget_opml_browser_init() {
 	  <label for="opml-browser-flatten-<?php echo $number; ?>" style="display:block">
 	    Flatten hierarchy? <input type="checkbox" id="opml-browser-flatten-<?php echo $number; ?>" name="opml-browser-flatten-<?php echo $number; ?>" value="1" <?php if ($options[$number]['flatten'] == '1') { ?>checked="true"<?php } ?> />
 	  </label>
+	  <label for="opml-browser-tooltips-<?php echo $number; ?>" style="display:block">
+	    Include OPML descriptions as tooltips? <input type="checkbox" id="opml-browser-tooltips-<?php echo $number; ?>" name="opml-browser-tooltips-<?php echo $number; ?>" value="1" <?php if ($options[$number]['tooltips'] == '1') { ?>checked="true"<?php } ?> />
+	  </label>
           <label for="opml-browser-indent-<?php echo $number; ?>" style="display:block">
 	    Left indent (CSS margin) <input type="text", id="opml-browser-indent-<?php echo $number; ?>" name="opml-browser-indent-<?php echo $number; ?>" size="10" value="<?php echo $options[$number]['indent']; ?>" />
+	  </label>
+	  <label for="opml-browser-credit-<?php echo $number; ?>" style="display:block">
+	    Include &quot;Get this widget&quot; link (please)? <input type="checkbox" id="opml-browser-credit-<?php echo $number; ?>" name="opml-browser-credit-<?php echo $number; ?>" value="1" <?php if ($options[$number]['credit'] == '1') { ?>checked="true"<?php } ?> />
 	  </label>
 	  <input type="hidden" name="opml-browser-submit-<?php echo $number; ?>" id="opml-browser-submit-<?php echo $number; ?>" value="1" />
 	</div>
@@ -358,15 +375,30 @@ function widget_opml_browser_init() {
                             $browser->opmlurl = $options[$number]['opmlurl'];
                             $browser->opmltitle = $options[$number]['opmltitle'];
                         }
+			$imageurl = $options[$number]['imageurl'];
+			if (isset($imageurl) && ($imageurl != ''))
+			{
+			  if (substr_compare($imageurl, '/', -1) != 0)
+			  {
+			    $imageurl .= '/';
+			  }
+			  $browser->image_url = $imageurl;
+			}
                         $browser->require_html = ($options[$number]['reqhtml'] == '1');
                         $browser->require_feed = ($options[$number]['reqfeed'] == '1');
                         $browser->exclude_self = ($options[$number]['noself'] == '1');
                         $browser->closeall = ($options[$number]['closeall'] == '1');
                         $browser->sort_items = ($options[$number]['sortitems'] == '1');
 			$browser->flatten = ($options[$number]['flatten'] == '1');
+			$browser->tooltips = ($options[$number]['tooltips'] == '1');
                         $browser->margin = $options[$number]['indent'];
+			$browser->credit = ($options[$number]['credit'] == '1');
                         $browser->name = "-widget-$number-";
-                        $widget_content = $browser->render() . '<div id="opml-browser-link-' . $number . '" class="opml-browser-link"><a href="http://chipstips.com/?tag=phpopmlbrowse">Get this widget</a></div>';
+                        $widget_content = $browser->render();
+			if ($browser->credit)
+			{
+			  $widget_content.= '<div id="opml-browser-link-' . $number . '" class="opml-browser-link"><a href="http://chipstips.com/?tag=phpopmlbrowse">Get this widget</a></div>';
+			}
                         echo $widget_content;
                         wp_cache_add("opml-browser-content-$number", $widget_content);
                      }
@@ -403,17 +435,26 @@ function widget_opml_browser_init() {
                 $options['number'] = 1;
                 $need_update = true;
             }
-            /* No changes to options between 1.2 and 2.0 */
-            if ($curver < 2.0) {
-                $curver = 2.0;
+            /* No changes to options between 1.2 and 2.2 */
+	    if ($curver < 2.2) {
+	        $curver = 2.2;
                 $options['version'] = $curver;
-                $need_update = true;
-            }
+		for ($i = 1; $i <= $options['number']; $i++)
+		{
+		    $options[$i]['imageurl'] = get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/';
+		    $options[$i]['tooltips'] = '1';
+		    $options[$i]['credit'] = '1';
+		}
+		$need_update = true;
+	    }
         }
         else {
-          $curver = 2.0;
+          $curver = 2.2;
           $options['version'] = $curver;
+	  $options[1]['imageurl'] = get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/';
+	  $options[1]['tooltips'] = '1';
           $options[1]['indent'] = "5px";
+	  $options[1]['credit'] = '1';
           $need_update = true;
         }
 
@@ -437,7 +478,7 @@ function widget_opml_browser_init() {
         for ($i = 1; $i <= 9; $i++) {
             $name = array('opml-browser %s', null, $i);
             register_sidebar_widget($name, $i <= $number ? 'widget_opml_browser' : /* unregister */ '', $i);
-            register_widget_control($name, $i <= $number ? 'widget_opml_browser_control' : /* unregister */ '', 550, 400, $i);
+            register_widget_control($name, $i <= $number ? 'widget_opml_browser_control' : /* unregister */ '', 550, 500, $i);
         }
         add_action('sidebar_admin_setup', 'widget_opml_browser_setup');
         add_action('sidebar_admin_page', 'widget_opml_browser_page');
@@ -518,13 +559,24 @@ function widget_opml_browser_init() {
                     $browser->opmlurl = null;
                 }
                 $browser->opmltitle = parse_attribute_value($bcode, 'opmltitle');
+		$imageurl = parse_attribute_value($bcode, 'imageurl');
+		if (isset($imageurl) && ($imageurl != ''))
+		{
+		  if (substr_compare($imageurl, '/', -1) != 0)
+		  {
+		    $imageurl .= '/';
+		  }
+		  $browser->image_url = $imageurl;
+		}
                 $browser->require_html = (parse_attribute_value($bcode, 'require_html') == '1');
                 $browser->require_feed = (parse_attribute_value($bcode, 'require_feed') == '1');
                 $browser->exclude_self = (parse_attribute_value($bcode, 'exclude_self') == '1');
                 $browser->closeall = (parse_attribute_value($bcode, 'closeall') == '1');
 		$browser->sort_items = (parse_attribute_value($bcode, 'sort') == '1');
 		$browser->flatten = (parse_attribute_value($bcode, 'flatten') == '1');
+		$browser->tooltips = (parse_attribute_value($bcode, 'tooltips') != '0');
                 $browser->margin = parse_attribute_value($bcode, 'margin');
+		$browser->credit = (parse_attribute_value($bcode, 'credit') != '0');
                 $browser->name = parse_attribute_value($bcode, 'name');
                 $output .= $browser->render();
             }
