@@ -4,7 +4,7 @@ Plugin Name: opml-browser widget
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Widget for browsing an OPML URL or file.
 Author: Sterling "Chip" Camden
-Version: 2.2
+Version: 2.3
 Author URI: http://www.chipsquips.com
 */
 
@@ -28,6 +28,7 @@ class OpmlBrowser
   var $require_feed;    // Exclude if no feed?
   var $require_html;    // Exclude if no html?
   var $exclude_self;    // Exclude this domain?
+  var $show_folders;	// Clickable folders for categories
   var $closeall;        // Start with folders closed (if javascript enabled)
   var $sort_items;	// Sort items?
   var $flatten;		// Flatten categories?
@@ -60,6 +61,7 @@ class OpmlBrowser
     $this->require_feed = false;
     $this->require_html = false;
     $this->exclude_self = false;
+    $this->show_folders = true;
     $this->closeall = false;
     $this->sort_items = false;
     $this->flatten = false;
@@ -92,10 +94,10 @@ class OpmlBrowser
     $display_content = '<div class="opml-browser-element" id="opml-browser-element' . $folder .'" >';
     $display_content .= '<span class="opml-browser-buttondiv">';
     if (!is_null($xmlUrl) && ($xmlUrl != ''))       // Use a feed icon if we have an XML source for this entry
-        $display_content .= '<a href="' . $xmlUrl . '"><img name="opml-browser-button' . $folder . '" class="opml-browser-button opml-browser-item" src="' . $this->image_link($type) .'" alt="Subscribe" /></a>';
-    if ($hasChildren)                               // A folder icon for categories
+        $display_content .= '<a href="' . htmlspecialchars($xmlUrl, ENT_COMPAT, "UTF-8", false) . '"><img id="opml-browser-button' . $folder . '" class="opml-browser-button opml-browser-item" src="' . $this->image_link($type) .'" alt="Subscribe" /></a>';
+    if ($hasChildren && $this->show_folders)                               // A folder icon for categories
     {
-      $display_content .= '<img name="opml-browser-folder' . $folder . '" class="opml-browser-button opml-browser-category" src="' . $this->image_link('folderopen'). '" alt="Category" />';
+      $display_content .= '<img id="opml-browser-folder' . $folder . '" class="opml-browser-button opml-browser-category" src="' . $this->image_link('folderopen'). '" alt="Category" />';
       $this->folders[] = $folder;           // Save to the list of folders for the close_all() method
     }
     $display_content .= '</span><span class="opml-browser-text';  // Common class for all elements for styling
@@ -105,13 +107,14 @@ class OpmlBrowser
       $display_content .= ' opml-browser-item';         // And a different one for line items
     $display_content .= '" >';
     if (!is_null($htmlUrl) && ($htmlUrl != ''))
-      $display_content .= '<a href="' . $htmlUrl . '">';    // Link the HTML
-    $display_content .= $text;
+      $display_content .= '<a href="' . htmlspecialchars($htmlUrl, ENT_COMPAT, "UTF-8", false) . '">';    // Link the HTML
+    $display_content .= htmlspecialchars($text, ENT_COMPAT, "UTF-8", false);
     if (!is_null($htmlUrl) && ($htmlUrl != ''))
       $display_content .= '</a>';
     $display_content .= '</span>';
     if (isset($tooltip)) {
-      $display_content .= '<span class="opml-browser-tooltip opml-browser-invisible">' . $tooltip . '</span>';
+      $display_content .= '<span class="opml-browser-tooltip opml-browser-invisible">' .
+        htmlspecialchars($tooltip, ENT_COMPAT, "UTF-8", false) . '</span>';
     }
     return $display_content;
   }
@@ -275,6 +278,7 @@ function widget_opml_browser_init() {
             $newoptions[$number]['reqfeed'] = $_POST["opml-browser-reqfeed-$number"];
             $newoptions[$number]['noself'] = $_POST["opml-browser-noself-$number"];
             $newoptions[$number]['opmllink'] = $_POST["opml-browser-opmllink-$number"];
+            $newoptions[$number]['showfolders'] = $_POST["opml-browser-showfolders-$number"];
             $newoptions[$number]['closeall'] = $_POST["opml-browser-closeall-$number"];
 	    $newoptions[$number]['sortitems'] = $_POST["opml-browser-sortitems-$number"];
 	    $newoptions[$number]['flatten'] = $_POST["opml-browser-flatten-$number"];
@@ -291,7 +295,7 @@ function widget_opml_browser_init() {
         ?>
 	<div style="text-align:right">
 	  <label for="opml-browser-title-<?php echo $number; ?>" style="display:block">
-	    Widget title: <input type="text" id="opml-browser-title-<?php echo $number; ?>" name="opml-browser-title-<?php echo $number; ?>" size="50" value="<?php echo htmlspecialchars($options[$number]['title']); ?>" />
+	    Widget title: <input type="text" id="opml-browser-title-<?php echo $number; ?>" name="opml-browser-title-<?php echo $number; ?>" size="50" value="<?php echo htmlspecialchars($options[$number]['title'], ENT_COMPAT, "UTF-8", false); ?>" />
 	  </label>
           <label for="opml-browser-opmlurl-<?php echo $number; ?>" style="display:block">
 	    OPML URL: <input type="text" id="opml-browser-opmlurl-<?php echo $number; ?>" name="opml-browser-opmlurl-<?php echo $number; ?>" size="50" value="<?php echo $options[$number]['opmlurl']; ?>" />
@@ -316,6 +320,9 @@ function widget_opml_browser_init() {
 	  </label>
           <label for="opml-browser-opmllink-<?php echo $number; ?>" style="display:block">
 	    Link to OPML? <input type="checkbox" id="opml-browser-opmllink-<?php echo $number; ?>" name="opml-browser-opmllink-<?php echo $number; ?>" value="1" <?php if ($options[$number]['opmllink'] == '1') { ?>checked="true"<?php } ?> />
+	  </label>
+          <label for="opml-browser-showfolders-<?php echo $number; ?>" style="display:block">
+	    Show clickable folders for categories? <input type="checkbox" id="opml-browser-showfolders-<?php echo $number; ?>" name="opml-browser-showfolders-<?php echo $number; ?>" value="1" <?php if ($options[$number]['showfolders'] == '1') { ?>checked="true"<?php } ?> />
 	  </label>
           <label for="opml-browser-closeall-<?php echo $number; ?>" style="display:block">
 	    Start with folders closed? <input type="checkbox" id="opml-browser-closeall-<?php echo $number; ?>" name="opml-browser-closeall-<?php echo $number; ?>" value="1" <?php if ($options[$number]['closeall'] == '1') { ?>checked="true"<?php } ?> />
@@ -387,6 +394,7 @@ function widget_opml_browser_init() {
                         $browser->require_html = ($options[$number]['reqhtml'] == '1');
                         $browser->require_feed = ($options[$number]['reqfeed'] == '1');
                         $browser->exclude_self = ($options[$number]['noself'] == '1');
+			$browser->show_folders = ($options[$number]['showfolders'] == '1');
                         $browser->closeall = ($options[$number]['closeall'] == '1');
                         $browser->sort_items = ($options[$number]['sortitems'] == '1');
 			$browser->flatten = ($options[$number]['flatten'] == '1');
@@ -447,9 +455,18 @@ function widget_opml_browser_init() {
 		}
 		$need_update = true;
 	    }
+	    if ($curver < 2.3) {
+	        $curver = 2.3;
+		$options['version'] = $curver;
+		for ($i = 1; $i <= $options['number']; $i++)
+		{
+		    $options[$i]['showfolders'] = '1';
+		}
+		$need_update = true;
+	    }
         }
         else {
-          $curver = 2.2;
+          $curver = 2.3;
           $options['version'] = $curver;
 	  $options[1]['imageurl'] = get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/';
 	  $options[1]['tooltips'] = '1';
@@ -571,6 +588,7 @@ function widget_opml_browser_init() {
                 $browser->require_html = (parse_attribute_value($bcode, 'require_html') == '1');
                 $browser->require_feed = (parse_attribute_value($bcode, 'require_feed') == '1');
                 $browser->exclude_self = (parse_attribute_value($bcode, 'exclude_self') == '1');
+                $browser->show_folders = (parse_attribute_value($bcode, 'show_folders') != '0');
                 $browser->closeall = (parse_attribute_value($bcode, 'closeall') == '1');
 		$browser->sort_items = (parse_attribute_value($bcode, 'sort') == '1');
 		$browser->flatten = (parse_attribute_value($bcode, 'flatten') == '1');

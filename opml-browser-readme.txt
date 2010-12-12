@@ -2,7 +2,7 @@ Plugin Name: opml-browser
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Display an OPML browser as a widget, in your template, or in a page/post.
 Author: Sterling "Chip" Camden
-Version: 2.2
+Version: 2.3
 Author URI: http://chipsquips.com
 
 Bitbucket repository: http://bitbucket.org/sterlingcamden/opml-browser
@@ -52,19 +52,21 @@ FOR WIDGET DISPLAY:
 	xmlURL attribute that specifies a URL on the same domain as your WordPress blog.
     h.  Link to OPML? Check this box to provide a link to your OPML using the OPML icon.
 	This link will appear as the top-level entry in the hierarchy.
-    i.  Start with folders closed? Check this box to have all categories collapsed on
-	startup if and only if javascript is enabled in the browser (otherwise the user
-	wouldn't have any way to open them).
-    j.	Sort items?  Check this box to sort items by title within each folder, in natural order,
+    i.  Show clickable folders for categories?  Check tis box to show a folder icon beside
+        each category entry, which can be clicked to open or close the category.
+    j.  Start with folders closed? Check this box to have all categories collapsed on
+	startup if and only if the "Show clickable folders" option is selected and javascript
+	is enabled in the browser (otherwise the user wouldn't have any way to open them).
+    k.	Sort items?  Check this box to sort items by title within each folder, in natural order,
         case-insensitive.
-    k.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
+    l.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
         then all items will be sorted together.
-    l.  Include OPML descriptions as tooltips?  Check this box to use the OPML description
+    m.  Include OPML descriptions as tooltips?  Check this box to use the OPML description
         attribute (if present) as tooltip text for each item.
-    m.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
+    n.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
 	much sub-items should be indented from their containing item.  It is initially
 	set to "5px".  Empty this field	to suppress indentation.
-    n.  Include "Get this widget" link (please)?  Check this box to include a link to the
+    o.  Include "Get this widget" link (please)?  Check this box to include a link to the
         site for this widget, or uncheck it to omit the link.
 6.  Drag the opml-blogroll widget to the sidebar where you want it to appear.
 7.  Save changes.
@@ -79,6 +81,7 @@ FOR DISPLAY FROM PHP:
 	$browser->require_html = (boolean);	// Exclude non-category items with no htmlURL?
 	$browser->require_feed = (boolean);	// Exclude non-category items with no xmlUrl?
 	$browser->exclude_self = (boolean);	// Exclude htmlUrl or xmlUrl from the blog's domain?
+	$browser->show_folders = (boolean);	// Show clickable folders for categories?
 	$browser->closeall = (boolean);		// Start with all folders closed?
 	$browser->sort = (boolean);		// Sort items?
 	$browser->flatten = (boolean);		// Flatten hierarchy?
@@ -90,13 +93,14 @@ FOR DISPLAY FROM PHP:
 FOR DISPLAY WITHIN THE TEXT OF A POST OR PAGE:
 
 	[opml-browser name="string" filename="string", opmlurl="string", imageurl="string"
-	        link_opml="1" require_html="1", require_feed="1" exclude_self="1" closeall="1"
-		sort="1" flatten="1" tooltips="0" margin="string" credit="0" ]
+	        link_opml="1" require_html="1", require_feed="1" exclude_self="1" show_folders="0"
+		closeall="1" sort="1" flatten="1" tooltips="0" margin="string" credit="0" ]
 
-	All of the attributes are optional.  In cases where "0" is specified above (tooltips, credits), omitting the
-	attribute defaults to "1".  If "imageurl" is not specified, the default will be used (see above). 
-	All other attributes default to null.  That means, for instance, that you must specify link_opml="1"
-	to get an OPML link, and you must specify either filename or opmlurl to serve up any links at all.
+	All of the attributes are optional.  In cases where "0" is specified above (show_folders, tooltips,
+	credits), omitting the attribute defaults to "1".  If "imageurl" is not specified, the default will
+	be used (see above).  All other attributes default to null.  That means, for instance, that you must
+	specify link_opml="1" to get an OPML link, and you must specify either filename or opmlurl to serve
+	up any links at all.
 
 	You really only need to specify a unique name for each browser if you have more than one.  Widgets use "-widget-N-",
 	where N is the number of the widget.  If you don't specify a name, '' is assumed.
@@ -114,11 +118,12 @@ file in the image URL.  So, if type="rss", then rss.png will be used.  If type="
 opml.png will be used.  If the type attribute specifies a type for which there is no image,
 then unknown.png will be used.
 
-If the "flatten hierarchy" option is not enabled, and the outline entry
-contains entries (typically a category), then an open folder icon ("folderopen.png")
-will be displayed.  This icon can be clicked to execute javascript that toggles the visibility
-of the contained entries, as well as toggling the icon to a closed folder ("folder.png").
-Naturally, if javascript is disabled, the folders are all open all the time.
+If the "show clickable folders" option is enabled, and the outline entry contains entries
+(typically a category) that have not been flattened by the "flatten hieracrhy" option,
+then an open folder icon ("folderopen.png") will be displayed.  This icon can be clicked
+to execute javascript that toggles the visibility of the contained entries, as well as
+toggling the icon to a closed folder ("folder.png").  Naturally, if javascript is disabled,
+the folders are all open all the time.
 
 The text for the entry will be displayed.  If an "htmlUrl" attribute was found, the
 text will be linked to that URL.
@@ -135,6 +140,14 @@ Each widget automatically adds an OPML auto-discovery link to the <head> section
 your page if you have specified a URL.  Thanks to Sergio Longoni (http://kromeblog.kromeboy.net)
 
 CHANGE LOG
+
+VERSION 2.3
+
+- Added option for "Show clickable folders for categories", with a default value of true for
+  compatibility with earlier versions.
+- Escape any special HTML characters found in the text, title, description, xmlUrl, or htmlUrl attributes,
+  but without double-escaping.
+- Changed img tags to use the "id" attribute instead of the obsolete "name" attribute.
 
 VERSION 2.2
 
