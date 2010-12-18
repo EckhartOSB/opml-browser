@@ -2,7 +2,7 @@ Plugin Name: opml-browser
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Display an OPML browser as a widget, in your template, or in a page/post.
 Author: Sterling "Chip" Camden
-Version: 2.3
+Version: 2.4
 Author URI: http://chipsquips.com
 
 Bitbucket repository: http://bitbucket.org/sterlingcamden/opml-browser
@@ -44,29 +44,32 @@ FOR WIDGET DISPLAY:
 	Leave empty to load from the URL.
     d.  Image URL: the URL for the icon images for each item.  if not set, defaults to
         get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/'.
-    e.  Exclude if no HTML link?  Check this box to omit any outline entry that
+    e.  Use rss.png from /wp-includes/images (Monda option)?  Check this box to make
+        an exception for the location of rss.png to share the image loaded with the
+	one used by WordPress itself.
+    f.  Exclude if no HTML link?  Check this box to omit any outline entry that
         has no "htmlUrl" or "url" attribute.
-    f.  Exclude if no feed link?  Check this box to omit any outline entry that
+    g.  Exclude if no feed link?  Check this box to omit any outline entry that
         has no "xmlUrl" attribute.
-    g.  Exclude (this domain)? Check this box to omit any entry that has an htmlURL or
+    h.  Exclude (this domain)? Check this box to omit any entry that has an htmlURL or
 	xmlURL attribute that specifies a URL on the same domain as your WordPress blog.
-    h.  Link to OPML? Check this box to provide a link to your OPML using the OPML icon.
+    i.  Link to OPML? Check this box to provide a link to your OPML using the OPML icon.
 	This link will appear as the top-level entry in the hierarchy.
-    i.  Show clickable folders for categories?  Check tis box to show a folder icon beside
+    j.  Show clickable folders for categories?  Check tis box to show a folder icon beside
         each category entry, which can be clicked to open or close the category.
-    j.  Start with folders closed? Check this box to have all categories collapsed on
+    k.  Start with folders closed? Check this box to have all categories collapsed on
 	startup if and only if the "Show clickable folders" option is selected and javascript
 	is enabled in the browser (otherwise the user wouldn't have any way to open them).
-    k.	Sort items?  Check this box to sort items by title within each folder, in natural order,
+    l.	Sort items?  Check this box to sort items by title within each folder, in natural order,
         case-insensitive.
-    l.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
+    m.  Flatten hierarchy?  Check this box to eliminate category folders.  If sort is enabled,
         then all items will be sorted together.
-    m.  Include OPML descriptions as tooltips?  Check this box to use the OPML description
+    n.  Include OPML descriptions as tooltips?  Check this box to use the OPML description
         attribute (if present) as tooltip text for each item.
-    n.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
+    o.	Left indent (CSS margin) Use any CSS measurement specification to indicate how
 	much sub-items should be indented from their containing item.  It is initially
 	set to "5px".  Empty this field	to suppress indentation.
-    o.  Include "Get this widget" link (please)?  Check this box to include a link to the
+    p.  Include "Get this widget" link (please)?  Check this box to include a link to the
         site for this widget, or uncheck it to omit the link.
 6.  Drag the opml-blogroll widget to the sidebar where you want it to appear.
 7.  Save changes.
@@ -78,6 +81,7 @@ FOR DISPLAY FROM PHP:
 	$browser->filename = (string);		// name of local OPML file or URL
 	$browser->opmlurl = (string);		// URL for the OPML (only if you want to link it)
 	$browser->image_url = (string);		// URL for images (only to override the default, must have trailing /)
+	$browser->monda = (boolean);		// Use rss.png from /wp-includes/images?
 	$browser->require_html = (boolean);	// Exclude non-category items with no htmlURL?
 	$browser->require_feed = (boolean);	// Exclude non-category items with no xmlUrl?
 	$browser->exclude_self = (boolean);	// Exclude htmlUrl or xmlUrl from the blog's domain?
@@ -92,7 +96,7 @@ FOR DISPLAY FROM PHP:
 
 FOR DISPLAY WITHIN THE TEXT OF A POST OR PAGE:
 
-	[opml-browser name="string" filename="string", opmlurl="string", imageurl="string"
+	[opml-browser name="string" filename="string", opmlurl="string", imageurl="string" monda="1"
 	        link_opml="1" require_html="1", require_feed="1" exclude_self="1" show_folders="0"
 		closeall="1" sort="1" flatten="1" tooltips="0" margin="string" credit="0" ]
 
@@ -116,7 +120,9 @@ If an entry has an "xmlUrl" attribute, an icon will be displayed, with a link
 to that entry's XML.  The "type" attribute of the entry will be used to find a PNG
 file in the image URL.  So, if type="rss", then rss.png will be used.  If type="opml",
 opml.png will be used.  If the type attribute specifies a type for which there is no image,
-then unknown.png will be used.
+then unknown.png will be used.  To save page load time, you can make an exception for rss.png
+and simply use the one from /wp-includes/images by enabling the "Monda option" (named after
+the user who suggested it, László Monda).
 
 If the "show clickable folders" option is enabled, and the outline entry contains entries
 (typically a category) that have not been flattened by the "flatten hieracrhy" option,
@@ -140,6 +146,10 @@ Each widget automatically adds an OPML auto-discovery link to the <head> section
 your page if you have specified a URL.  Thanks to Sergio Longoni (http://kromeblog.kromeboy.net)
 
 CHANGE LOG
+
+VERSION 2.4
+
+- Added the "Monda option" to override the location of rss.png to /wp-includes/images.
 
 VERSION 2.3
 

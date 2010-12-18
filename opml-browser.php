@@ -4,7 +4,7 @@ Plugin Name: opml-browser widget
 Plugin URI: http://www.chipstips.com/?tag=phpopmlbrowse
 Description: Widget for browsing an OPML URL or file.
 Author: Sterling "Chip" Camden
-Version: 2.3
+Version: 2.4
 Author URI: http://www.chipsquips.com
 */
 
@@ -35,6 +35,7 @@ class OpmlBrowser
   var $tooltips;	// Show tooltips?
   var $margin;          // CSS margin for indent
   var $credit;		// Include credit link?
+  var $monda;		// Use rss.png in /wp-includes/images?
   var $name;            // Unique name for this instance
   
   var $siteurl;         // URL for WordPress site
@@ -75,7 +76,11 @@ class OpmlBrowser
   function image_link($imagename) {
     if (is_null($this->imagepath[$imagename]))
     {
-    	$path = $this->image_url . $imagename . '.png';
+	if ($this->monda && ($imagename == "rss")) {
+	  $path = $this->siteurl . '/wp-includes/images/rss.png';
+	} else {
+    	  $path = $this->image_url . $imagename . '.png';
+	}
 	if (wp_remote_fopen($path)) {
 	  $this->imagepath[$imagename] = $path;
 	}
@@ -274,6 +279,7 @@ function widget_opml_browser_init() {
             $newoptions[$number]['opmlpath'] = $_POST["opml-browser-opmlpath-$number"];
             $newoptions[$number]['opmltitle'] = $_POST["opml-browser-opmltitle-$number"];
 	    $newoptions[$number]['imageurl'] = $_POST["opml-browser-imageurl-$number"];
+            $newoptions[$number]['monda'] = $_POST["opml-browser-monda-$number"];
             $newoptions[$number]['reqhtml'] = $_POST["opml-browser-reqhtml-$number"];
             $newoptions[$number]['reqfeed'] = $_POST["opml-browser-reqfeed-$number"];
             $newoptions[$number]['noself'] = $_POST["opml-browser-noself-$number"];
@@ -308,6 +314,9 @@ function widget_opml_browser_init() {
 	  </label>
           <label for="opml-browser-imageurl-<?php echo $number; ?>" style="display:block">
 	    Image URL: <input type="text" id="opml-browser-imageurl-<?php echo $number; ?>" name="opml-browser-imageurl-<?php echo $number; ?>" size="50" value="<?php echo $options[$number]['imageurl']; ?>" />
+	  </label>
+          <label for="opml-browser-monda-<?php echo $number; ?>" style="display:block">
+	    Use rss.png from wp-includes/images (Monda option)? <input type="checkbox" id="opml-browser-monda-<?php echo $number; ?>" name="opml-browser-monda-<?php echo $number; ?>" value="1" <?php if ($options[$number]['monda'] == '1') { ?>checked="true"<?php } ?> />
 	  </label>
           <label for="opml-browser-reqhtml-<?php echo $number; ?>" style="display:block">
 	    Exclude if no HTML link? <input type="checkbox" id="opml-browser-reqhtml-<?php echo $number; ?>" name="opml-browser-reqhtml-<?php echo $number; ?>" value="1" <?php if ($options[$number]['reqhtml'] == '1') { ?>checked="true"<?php } ?> />
@@ -391,6 +400,7 @@ function widget_opml_browser_init() {
 			  }
 			  $browser->image_url = $imageurl;
 			}
+			$browser->monda = ($options[$number]['monda'] == '1');
                         $browser->require_html = ($options[$number]['reqhtml'] == '1');
                         $browser->require_feed = ($options[$number]['reqfeed'] == '1');
                         $browser->exclude_self = ($options[$number]['noself'] == '1');
@@ -464,9 +474,14 @@ function widget_opml_browser_init() {
 		}
 		$need_update = true;
 	    }
+	    if ($curver < 2.4) {
+	        $curver = 2.4;
+		$options['version'] = $curver;
+		$need_update = true;
+	    }
         }
         else {
-          $curver = 2.3;
+          $curver = 2.4;
           $options['version'] = $curver;
 	  $options[1]['imageurl'] = get_settings('siteurl') . '/wp-content/plugins/opml-browser/images/';
 	  $options[1]['tooltips'] = '1';
@@ -585,6 +600,7 @@ function widget_opml_browser_init() {
 		  }
 		  $browser->image_url = $imageurl;
 		}
+		$browser->monda = (parse_attribute($bcode, 'monda') == '1');
                 $browser->require_html = (parse_attribute_value($bcode, 'require_html') == '1');
                 $browser->require_feed = (parse_attribute_value($bcode, 'require_feed') == '1');
                 $browser->exclude_self = (parse_attribute_value($bcode, 'exclude_self') == '1');
