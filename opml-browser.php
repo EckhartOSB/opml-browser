@@ -600,7 +600,7 @@ function widget_opml_browser_init() {
 		  }
 		  $browser->image_url = $imageurl;
 		}
-		$browser->monda = (parse_attribute($bcode, 'monda') == '1');
+		$browser->monda = (parse_attribute_value($bcode, 'monda') == '1');
                 $browser->require_html = (parse_attribute_value($bcode, 'require_html') == '1');
                 $browser->require_feed = (parse_attribute_value($bcode, 'require_feed') == '1');
                 $browser->exclude_self = (parse_attribute_value($bcode, 'exclude_self') == '1');
